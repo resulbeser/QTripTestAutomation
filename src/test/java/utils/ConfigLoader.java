@@ -21,9 +21,6 @@ public class ConfigLoader {
         return config.getProperty("baseUrl");
     }
 
-    public static String getBrowser() {
-        return config.getProperty("browser", "chrome");
-    }
 
     public static String getProperty(String key) {
         return config.getProperty(key);

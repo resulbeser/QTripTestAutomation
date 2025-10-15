@@ -14,13 +14,15 @@ import utils.*;
 public class RegisterTest extends BaseTest {
 
     /**
-     * Test 1: Register sayfasına başarılı navigasyon testi
+     * TC-01: Register sayfasına başarılı navigasyon testi
      */
     @Test(priority = 1)
     public void testRegisterNavigation() {
         // Test başlat ve bilgileri kaydet
-        test = extent.createTest("Register Sayfası Navigasyon", "Ana sayfadan register sayfasına geçiş testi")
-                .assignCategory("Navigation").assignAuthor("QA Team");
+        test = extent.createTest("TC-01: Register Sayfası Navigasyon", "Ana sayfadan register sayfasına geçiş testi")
+                .assignCategory("Register Tests - Navigation")
+                .assignCategory("Positive Tests")
+                .assignAuthor("QA Team");
 
         // Ana sayfadan register sayfasına git
         HeaderFragment header = new HeaderFragment(driver);
@@ -34,13 +36,15 @@ public class RegisterTest extends BaseTest {
     }
 
     /**
-     * Test 2: Yeni kullanıcı kaydı - Pozitif senaryo
+     * TC-02: Yeni kullanıcı kaydı - Pozitif senaryo
      */
     @Test(priority = 2)
     public void testNewUserRegistration() {
         // Test başlat
-        test = extent.createTest("Yeni Kullanıcı Kaydı", "Geçerli bilgilerle yeni kullanıcı kaydı")
-                .assignCategory("Registration").assignAuthor("QA Team");
+        test = extent.createTest("TC-02: Yeni Kullanıcı Kaydı", "Geçerli bilgilerle yeni kullanıcı kaydı")
+                .assignCategory("Register Tests - Registration")
+                .assignCategory("Positive Tests")
+                .assignAuthor("QA Team");
 
         // Test verilerini hazırla
         String email = "user" + System.currentTimeMillis() + "@example.com";
@@ -62,13 +66,15 @@ public class RegisterTest extends BaseTest {
     }
 
     /**
-     * Test 3: Duplicate email testi - Negatif senaryo
+     * TC-03: Duplicate email testi - Negatif senaryo
      */
     @Test(priority = 3)
     public void testDuplicateEmailRegistration() {
         // Test başlat
-        test = extent.createTest("Duplicate Email Testi", "Mevcut email ile kayıt deneme")
-                .assignCategory("Negative Tests").assignAuthor("QA Team");
+        test = extent.createTest("TC-03: Duplicate Email Testi", "Mevcut email ile kayıt deneme")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
 
         // Mevcut kullanıcı verilerini al
         User existingUser = TestDataReader.getRegisterUsers().get(0);
@@ -91,13 +97,15 @@ public class RegisterTest extends BaseTest {
     }
 
     /**
-     * Test 4: Kısa şifre testi - Negatif senaryo
+     * TC-04: Kısa şifre testi - Negatif senaryo
      */
     @Test(priority = 4)
     public void testShortPasswordRegistration() {
         // Test başlat
-        test = extent.createTest("Kısa Şifre Testi", "6 karakterden kısa şifre ile kayıt deneme")
-                .assignCategory("Negative Tests").assignAuthor("QA Team");
+        test = extent.createTest("TC-04: Kısa Şifre Testi", "6 karakterden kısa şifre ile kayıt deneme")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
 
         // Test verilerini hazırla
         String email = "user" + System.currentTimeMillis() + "@example.com";
