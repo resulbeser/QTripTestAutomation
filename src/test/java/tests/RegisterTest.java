@@ -93,6 +93,33 @@ public class RegisterTest {
         test.pass("Sistem, tekrar kayıt denemesinde doğru hata mesajını gösterdi");
     }
 
+    @Test(priority = 4)
+    public void testShortPasswordRegistration() {
+        test = extent.createTest(TestCaseMeta.TC04);
+
+        String email = "user" + System.currentTimeMillis() + "@example.com";
+        String shortPassword = ConfigLoader.getProperty("weak.password");
+
+        test.info("6 karakterden kısa şifreyle kayıt deneniyor: " + email);
+
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.info("Register sayfasına geçildi");
+
+        registerPage.register(email, shortPassword);
+        test.info("Kayıt formu dolduruldu ve gönderildi (şifre maskelendi)");
+
+        String errorMessage = registerPage.getErrorMessage();
+        test.info("Alınan hata mesajı: " + errorMessage);
+
+        Assert.assertTrue(errorMessage.contains("Failed - Password must be atleast 6 in length"),
+                "Beklenen hata mesajı alınmadı!");
+
+        test.pass("Sistem, kısa şifreyle kayıt denemesinde doğru hata mesajını gösterdi");
+    }
+
+
+
 
     @AfterMethod
     public void tearDown() {
