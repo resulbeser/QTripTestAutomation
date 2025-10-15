@@ -2,31 +2,29 @@ package pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.WebElement;
 import utils.WaitHelper;
 
-import java.time.Duration;
-
-
 public class HeaderFragment {
-    private WebDriver driver;
+    private final WebDriver driver;
 
     public HeaderFragment(WebDriver driver) {
         this.driver = driver;
     }
 
-    // Register link selector
-    private By registerLink = By.cssSelector("#navbarNavDropdown > ul > li:nth-child(4) > a");
+    private final By registerLink = By.linkText("Register");
 
     public void clickRegister() {
-        driver.findElement(registerLink).click();
+        WebElement element = WaitHelper.waitForClickability(driver, registerLink);
+        element.click();
+    }
+
+    public void navigateToRegisterPage() {
+        clickRegister();
+        WaitHelper.waitForUrlContains(driver, "/pages/register");
     }
 
     public boolean isOnRegisterPage() {
-        WaitHelper.getWait(driver).until(ExpectedConditions.urlContains("/pages/register/"));
-        return driver.getCurrentUrl().contains("/pages/register/");
+        return driver.getCurrentUrl().contains("/pages/register");
     }
-
-
 }

@@ -28,4 +28,8 @@ public class ConfigLoader {
     public static String getProperty(String key) {
         return config.getProperty(key);
     }
+
+    public static String getProperty(String key, String defaultValue) {
+        return config.getProperty(key, defaultValue);
+    }
 }

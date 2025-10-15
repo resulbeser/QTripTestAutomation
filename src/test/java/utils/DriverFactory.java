@@ -9,10 +9,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class DriverFactory {
-    private static WebDriver driver;
+    private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     private static Properties config;
 
-    // Config dosyasını yükle
     static {
         config = new Properties();
         try {
@@ -23,31 +22,29 @@ public class DriverFactory {
         }
     }
 
-    // WebDriver başlat
     public static WebDriver getDriver() {
-        if (driver == null) {
+        if (driver.get() == null) {
             String browser = config.getProperty("browser", "chrome");
 
             switch (browser.toLowerCase()) {
                 case "firefox":
-                    driver = new FirefoxDriver();
+                    driver.set(new FirefoxDriver());
                     break;
                 case "chrome":
                 default:
-                    driver = new ChromeDriver();
+                    driver.set(new ChromeDriver());
                     break;
             }
 
-            driver.manage().window().maximize();
+            driver.get().manage().window().maximize();
         }
-        return driver;
+        return driver.get();
     }
 
-    // WebDriver kapat
     public static void quitDriver() {
-        if (driver != null) {
-            driver.quit();
-            driver = null;
+        if (driver.get() != null) {
+            driver.get().quit();
+            driver.remove();
         }
     }
 }
