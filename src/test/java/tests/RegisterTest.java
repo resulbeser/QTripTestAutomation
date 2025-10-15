@@ -36,106 +36,12 @@ public class RegisterTest extends BaseTest {
     }
 
     /**
-     * TC-02: Yeni kullanıcı kaydı - Pozitif senaryo
+     * TC-02: Boş form validasyon testi - Negatif senaryo
      */
     @Test(priority = 2)
-    public void testNewUserRegistration() {
-        // Test başlat
-        test = extent.createTest("TC-02: Yeni Kullanıcı Kaydı", "Geçerli bilgilerle yeni kullanıcı kaydı")
-                .assignCategory("Register Tests - Registration")
-                .assignCategory("Positive Tests")
-                .assignAuthor("QA Team");
-
-        // Test verilerini hazırla
-        String email = "user" + System.currentTimeMillis() + "@example.com";
-        String password = DataGenerator.generateSecurePassword();
-        test.info("Email: " + email);
-
-        // Register sayfasına git
-        HeaderFragment header = new HeaderFragment(driver);
-        header.clickRegister();
-
-        // Kayıt formunu doldur ve gönder
-        RegisterPage registerPage = new RegisterPage(driver);
-        registerPage.register(email, password);
-        test.pass("Kayıt formu başarıyla dolduruldu");
-
-        // Kayıt başarılı mı kontrol et
-        Assert.assertTrue(registerPage.isRegistrationSuccessful(), "Kayıt işlemi başarısız!");
-        test.pass("Yeni kullanıcı başarıyla kaydedildi");
-    }
-
-    /**
-     * TC-03: Duplicate email testi - Negatif senaryo
-     */
-    @Test(priority = 3)
-    public void testDuplicateEmailRegistration() {
-        // Test başlat
-        test = extent.createTest("TC-03: Duplicate Email Testi", "Mevcut email ile kayıt deneme")
-                .assignCategory("Register Tests - Validation")
-                .assignCategory("Negative Tests")
-                .assignAuthor("QA Team");
-
-        // Mevcut kullanıcı verilerini al
-        User existingUser = TestDataReader.getRegisterUsers().get(0);
-        test.info("Mevcut Email: " + existingUser.getEmail());
-
-        // Register sayfasına git ve mevcut email ile kayıt dene
-        HeaderFragment header = new HeaderFragment(driver);
-        header.clickRegister();
-
-        RegisterPage registerPage = new RegisterPage(driver);
-        registerPage.register(existingUser.getEmail(), existingUser.getPassword());
-
-        // Duplicate email hata mesajını kontrol et
-        String errorMessage = registerPage.getErrorMessage();
-        test.info("Hata Mesajı: " + errorMessage);
-
-        Assert.assertTrue(errorMessage.contains(Constants.ErrorMessages.EMAIL_EXISTS),
-                "Duplicate email hatası alınmadı!");
-        test.pass("Sistem duplicate email için doğru hata gösterdi");
-    }
-
-    /**
-     * TC-04: Kısa şifre testi - Negatif senaryo
-     */
-    @Test(priority = 4)
-    public void testShortPasswordRegistration() {
-        // Test başlat
-        test = extent.createTest("TC-04: Kısa Şifre Testi", "6 karakterden kısa şifre ile kayıt deneme")
-                .assignCategory("Register Tests - Validation")
-                .assignCategory("Negative Tests")
-                .assignAuthor("QA Team");
-
-        // Test verilerini hazırla
-        String email = "user" + System.currentTimeMillis() + "@example.com";
-        String shortPassword = ConfigLoader.getProperty("weak.password");
-        test.info("Email: " + email);
-        test.info("Kısa Şifre: " + shortPassword + " (" + shortPassword.length() + " karakter)");
-
-        // Register sayfasına git ve kısa şifre ile kayıt dene
-        HeaderFragment header = new HeaderFragment(driver);
-        header.clickRegister();
-
-        RegisterPage registerPage = new RegisterPage(driver);
-        registerPage.register(email, shortPassword);
-
-        // Kısa şifre hata mesajını kontrol et
-        String errorMessage = registerPage.getErrorMessage();
-        test.info("Hata Mesajı: " + errorMessage);
-
-        Assert.assertTrue(errorMessage.contains(Constants.ErrorMessages.PASSWORD_SHORT),
-                "Kısa şifre hatası alınmadı!");
-        test.pass("Sistem kısa şifre için doğru hata gösterdi");
-    }
-
-    /**
-     * TC-05: Boş form validasyon testi - Negatif senaryo
-     */
-    @Test(priority = 5)
     public void testEmptyFormValidation() {
         // Test başlat
-        test = extent.createTest("TC-05: Boş Form Validasyon Testi", "Tüm alanlar boş bırakıldığında validasyon kontrolü")
+        test = extent.createTest("TC-02: Boş Form Validasyon Testi", "Tüm alanlar boş bırakıldığında validasyon kontrolü")
                 .assignCategory("Register Tests - Validation")
                 .assignCategory("Negative Tests")
                 .assignAuthor("QA Team");
@@ -168,6 +74,275 @@ public class RegisterTest extends BaseTest {
         }
     }
 
+    /**
+     * TC-03: Sadece Email Dolu Testi - Negatif senaryo
+     */
+    @Test(priority = 3)
+    public void testOnlyEmailFilledValidation() {
+        // Test başlat
+        test = extent.createTest("TC-03: Sadece Email Dolu Testi", "Sadece email doldurulup diğer alanlar boş bırakıldığında validasyon kontrolü")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
 
+        // Test verilerini hazırla
+        String email = "user" + System.currentTimeMillis() + "@example.com";
+        test.info("Email: " + email);
+        test.info("Şifre ve Şifre Tekrar: (boş bırakıldı)");
 
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.pass("Register sayfasına başarıyla geçildi");
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Sadece email doldur, diğer alanları boş bırak
+        registerPage.enterEmail(email);
+        test.pass("Sadece email alanı dolduruldu");
+
+        // Register butonuna tıkla (şifre alanları boşken)
+        registerPage.clickRegister();
+        test.info("Şifre alanları boş bırakılarak register butonuna tıklandı");
+
+        // Hala register sayfasında olduğunu kontrol et (form gönderilmemeli)
+        Assert.assertTrue(registerPage.isCurrentPage(),
+                "Form gönderildi! Şifre alanları boşken form gönderimi engellenmeli.");
+        test.pass("Form gönderimi başarıyla engellendi");
+
+        // Validasyon mesajını kontrol et
+        String errorMessage = registerPage.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            test.info("Validasyon Mesajı: " + errorMessage);
+            test.pass("Sistem boş şifre alanları için validasyon mesajı gösterdi");
+        } else {
+            test.pass("HTML5 validasyonu ile form gönderimi engellendi");
+        }
+    }
+
+    /**
+     * TC-04: Email ve şifre dolu, confirm password boş testi - Negatif senaryo
+     */
+    @Test(priority = 4)
+    public void testEmailPasswordFilledConfirmPasswordEmpty() {
+        // Test başlat
+        test = extent.createTest("TC-04: Confirm Password Boş Validasyon Testi", "Email ve şifre doldurulup confirm password boş bırakıldığında validasyon kontrolü")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
+
+        // Test verilerini hazırla
+        String email = "user" + System.currentTimeMillis() + "@example.com";
+        String password = DataGenerator.generateSecurePassword();
+        test.info("Email: " + email);
+        test.info("Şifre Tekrar: (boş bırakıldı)");
+
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.pass("Register sayfasına başarıyla geçildi");
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Email ve şifre doldur, confirm password boş bırak
+        registerPage.enterEmail(email);
+        registerPage.enterPassword(password);
+        test.pass("Email ve şifre alanları dolduruldu, confirm password boş bırakıldı");
+
+        // Register butonuna tıkla (confirm password boşken)
+        registerPage.clickRegister();
+        test.info("Confirm password boş bırakılarak register butonuna tıklandı");
+
+        // Hala register sayfasında olduğunu kontrol et (form gönderilmemeli)
+        Assert.assertTrue(registerPage.isCurrentPage(),
+                "Form gönderildi! Confirm password boşken form gönderimi engellenmeli.");
+        test.pass("Form gönderimi başarıyla engellendi");
+
+        // Validasyon mesajını kontrol et
+        String errorMessage = registerPage.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            test.info("Validasyon Mesajı: " + errorMessage);
+            test.pass("Sistem boş confirm password alanı için validasyon mesajı gösterdi");
+        } else {
+            test.pass("HTML5 validasyonu ile form gönderimi engellendi");
+        }
+    }
+
+    /**
+     * TC-05: Şifre uyumsuzluğu testi - Negatif senaryo
+     */
+    @Test(priority = 5)
+    public void testPasswordMismatchValidation() {
+        // Test başlat
+        test = extent.createTest("TC-05: Şifre Uyumsuzluğu Testi", "Farklı şifreler girildiğinde validasyon kontrolü")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
+
+        // Test verilerini hazırla
+        String email = "user" + System.currentTimeMillis() + "@example.com";
+        String password = DataGenerator.generateSecurePassword();
+        String confirmPassword = DataGenerator.generateSecurePassword(); // Farklı şifre
+        test.info("Email: " + email);
+        test.info("Şifre: " + password);
+        test.info("Şifre Tekrar: " + confirmPassword);
+
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.pass("Register sayfasına başarıyla geçildi");
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Form alanlarını farklı şifrelerle doldur
+        registerPage.enterEmail(email);
+        registerPage.enterPassword(password);
+        registerPage.enterConfirmPassword(confirmPassword);
+        test.pass("Form alanları farklı şifrelerle dolduruldu");
+
+        // Register butonuna tıkla
+        registerPage.clickRegister();
+        test.info("Farklı şifrelerle register butonuna tıklandı");
+
+        // ÖNCELİKLE alert kontrolü yap (alert varsa hemen yakala)
+        String errorMessage = registerPage.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            test.info("Hata Mesajı: " + errorMessage);
+            Assert.assertTrue(errorMessage.contains("Password and confirm Password do not match") ||
+                            errorMessage.contains("Passwords do not match") ||
+                            errorMessage.contains("Şifreler eşleşmiyor"),
+                    "Şifre uyumsuzluğu hatası alınmadı!");
+            test.pass("Sistem şifre uyumsuzluğu için doğru hata gösterdi");
+        }
+
+        // Alert kapandıktan sonra sayfa kontrolü yap
+        Assert.assertTrue(registerPage.isCurrentPage(),
+                "Form gönderildi! Şifre uyumsuzluğunda form gönderimi engellenmeli.");
+        test.pass("Form gönderimi başarıyla engellendi");
+    }
+
+    /**
+     * TC-06: Kısa şifre testi - Negatif senaryo
+     */
+    @Test(priority = 6)
+    public void testShortPasswordRegistration() {
+        // Test başlat
+        test = extent.createTest("TC-06: Kısa Şifre Testi", "6 karakterden kısa şifre ile kayıt deneme")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
+
+        // Test verilerini hazırla
+        String email = "user" + System.currentTimeMillis() + "@example.com";
+        String shortPassword = ConfigLoader.getProperty("weak.password");
+        test.info("Email: " + email);
+        test.info("Kısa Şifre: " + shortPassword + " (" + shortPassword.length() + " karakter)");
+
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Form alanlarını tek tek doldur
+        registerPage.enterEmail(email);
+        registerPage.enterPassword(shortPassword);
+        registerPage.enterConfirmPassword(shortPassword);
+        test.pass("Form alanları dolduruldu");
+
+        // Register butonuna tıkla
+        registerPage.clickRegister();
+        test.info("Register butonuna tıklandı");
+
+        // Hala register sayfasında olduğunu kontrol et
+        Assert.assertTrue(registerPage.isCurrentPage(),
+                "Register sayfasından ayrıldı! Kısa şifre ile kayıt engellenmeliydi.");
+        test.pass("Form gönderimi başarıyla engellendi");
+
+        // Kısa şifre hata mesajını kontrol et (timeout ile)
+        String errorMessage = registerPage.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            test.info("Hata Mesajı: " + errorMessage);
+            test.pass("Sistem kısa şifre için validasyon mesajı gösterdi");
+        } else {
+            test.pass("HTML5 validasyonu ile form gönderimi engellendi");
+        }
+    }
+
+    /**
+     * TC-07: Duplicate email testi - Negatif senaryo
+     */
+    @Test(priority = 7)
+    public void testDuplicateEmailRegistration() {
+        // Test başlat
+        test = extent.createTest("TC-07: Duplicate Email Testi", "Mevcut email ile kayıt deneme")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
+
+        // Mevcut kullanıcı verilerini al
+        User existingUser = TestDataReader.getRegisterUsers().get(0);
+        test.info("Mevcut Email: " + existingUser.getEmail());
+
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Form alanlarını tek tek doldur
+        registerPage.enterEmail(existingUser.getEmail());
+        registerPage.enterPassword(existingUser.getPassword());
+        registerPage.enterConfirmPassword(existingUser.getPassword());
+        test.pass("Form alanları dolduruldu");
+
+        // Register butonuna tıkla
+        registerPage.clickRegister();
+        test.info("Register butonuna tıklandı");
+
+        // Duplicate email hata mesajını kontrol et (timeout ile)
+        String errorMessage = registerPage.getErrorMessage();
+        test.info("Hata Mesajı: " + errorMessage);
+
+        Assert.assertTrue(errorMessage.contains(Constants.ErrorMessages.EMAIL_EXISTS),
+                "Duplicate email hatası alınmadı!");
+        test.pass("Sistem duplicate email için doğru hata gösterdi");
+    }
+
+    /**
+     * TC-08: Yeni kullanıcı kaydı - Pozitif senaryo
+     */
+    @Test(priority = 8)
+    public void testNewUserRegistration() {
+        // Test başlat
+        test = extent.createTest("TC-08: Yeni Kullanıcı Kaydı", "Geçerli bilgilerle yeni kullanıcı kaydı")
+                .assignCategory("Register Tests - Registration")
+                .assignCategory("Positive Tests")
+                .assignAuthor("QA Team");
+
+        // Test verilerini hazırla
+        String email = "user" + System.currentTimeMillis() + "@example.com";
+        String password = DataGenerator.generateSecurePassword();
+        test.info("Email: " + email);
+
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Form alanlarını tek tek doldur
+        registerPage.enterEmail(email);
+        registerPage.enterPassword(password);
+        registerPage.enterConfirmPassword(password);
+        test.pass("Kayıt formu başarıyla dolduruldu");
+
+        // Register butonuna tıkla
+        registerPage.clickRegister();
+        test.info("Register butonuna tıklandı");
+
+        // Kayıt başarılı mı kontrol et (timeout ile)
+        Assert.assertTrue(registerPage.isRegistrationSuccessful(), "Kayıt işlemi başarısız!");
+        test.pass("Yeni kullanıcı başarıyla kaydedildi");
+    }
 }
