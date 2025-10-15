@@ -1,129 +1,123 @@
 package tests;
 
-import com.aventstack.extentreports.ExtentReports;
-import com.aventstack.extentreports.ExtentTest;
-import org.openqa.selenium.WebDriver;
+import base.BaseTest;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pages.HeaderFragment;
 import pages.RegisterPage;
 import utils.*;
 
-import static utils.DataGenerator.generateSecurePassword;
-import utils.ExtentManager;
+/**
+ * QTrip Uygulaması Register Fonksiyonalitesi Test Sınıfı
+ * Bu sınıf kullanıcı kayıt işlemlerini test eder
+ */
+public class RegisterTest extends BaseTest {
 
-
-public class RegisterTest {
-    WebDriver driver;
-    RegisterPage registerPage;
-    ExtentReports extent;
-    ExtentTest test;
-
-
-    @BeforeMethod
-    public void setup() {
-        extent = ExtentManager.getInstance();
-        test = extent.createTest("Register Test");
-        driver = DriverFactory.getDriver();
-        driver.get(ConfigLoader.getBaseUrl());
-        registerPage = new RegisterPage(driver);
-    }
-
-
+    /**
+     * Test 1: Register sayfasına başarılı navigasyon testi
+     */
     @Test(priority = 1)
     public void testRegisterNavigation() {
-        test = extent.createTest(TestCaseMeta.TC01);
-        test.info("Register linkine tıklanıyor");
+        // Test başlat ve bilgileri kaydet
+        test = extent.createTest("Register Sayfası Navigasyon", "Ana sayfadan register sayfasına geçiş testi")
+                .assignCategory("Navigation").assignAuthor("QA Team");
 
+        // Ana sayfadan register sayfasına git
         HeaderFragment header = new HeaderFragment(driver);
-        header.clickRegister();
+        header.navigateToRegisterPage();
+        test.pass("Register linkine başarıyla tıklandı");
 
-        boolean isOnRegisterPage = header.isOnRegisterPage();
-        test.info("Sayfa durumu kontrol ediliyor");
-
-        Assert.assertTrue(isOnRegisterPage, "Register linkine tıklanınca kayıt formu açılmadı!");
-        test.pass("Kayıt formu başarıyla açıldı");
+        // Register sayfasında olduğunu doğrula
+        RegisterPage registerPage = new RegisterPage(driver);
+        Assert.assertTrue(registerPage.isCurrentPage(), "Register sayfasına geçilemedi!");
+        test.pass("Register sayfasına başarıyla yönlendirildi");
     }
 
-
-
+    /**
+     * Test 2: Yeni kullanıcı kaydı - Pozitif senaryo
+     */
     @Test(priority = 2)
-    public void testDynamicUserRegistrationFromJson() {
-        test = extent.createTest(TestCaseMeta.TC02);
+    public void testNewUserRegistration() {
+        // Test başlat
+        test = extent.createTest("Yeni Kullanıcı Kaydı", "Geçerli bilgilerle yeni kullanıcı kaydı")
+                .assignCategory("Registration").assignAuthor("QA Team");
 
+        // Test verilerini hazırla
         String email = "user" + System.currentTimeMillis() + "@example.com";
-        String password = generateSecurePassword();
-        test.info("Yeni kullanıcı oluşturuluyor: " + email);
+        String password = DataGenerator.generateSecurePassword();
+        test.info("Email: " + email);
 
+        // Register sayfasına git
         HeaderFragment header = new HeaderFragment(driver);
         header.clickRegister();
-        test.info("Register sayfasına geçildi");
 
+        // Kayıt formunu doldur ve gönder
         RegisterPage registerPage = new RegisterPage(driver);
         registerPage.register(email, password);
-        test.info("Kullanıcı formu dolduruldu ve gönderildi");
+        test.pass("Kayıt formu başarıyla dolduruldu");
 
-        boolean isRegistered = registerPage.isRegistrationSuccessful();
-        Assert.assertTrue(isRegistered, "Kayıt başarısız oldu!");
-        test.pass("Kullanıcı başarıyla kaydedildi");
+        // Kayıt başarılı mı kontrol et
+        Assert.assertTrue(registerPage.isRegistrationSuccessful(), "Kayıt işlemi başarısız!");
+        test.pass("Yeni kullanıcı başarıyla kaydedildi");
     }
 
-
-
+    /**
+     * Test 3: Duplicate email testi - Negatif senaryo
+     */
     @Test(priority = 3)
     public void testDuplicateEmailRegistration() {
-        test = extent.createTest(TestCaseMeta.TC03);
+        // Test başlat
+        test = extent.createTest("Duplicate Email Testi", "Mevcut email ile kayıt deneme")
+                .assignCategory("Negative Tests").assignAuthor("QA Team");
 
-        User user = TestDataReader.getRegisterUsers().get(0);
-        test.info("Var olan kullanıcıyla kayıt deneniyor: " + user.getEmail());
+        // Mevcut kullanıcı verilerini al
+        User existingUser = TestDataReader.getRegisterUsers().get(0);
+        test.info("Mevcut Email: " + existingUser.getEmail());
 
+        // Register sayfasına git ve mevcut email ile kayıt dene
         HeaderFragment header = new HeaderFragment(driver);
         header.clickRegister();
-        test.info("Register sayfasına geçildi");
 
-        registerPage.register(user.getEmail(), user.getPassword());
-        test.info("Kayıt formu dolduruldu ve gönderildi");
+        RegisterPage registerPage = new RegisterPage(driver);
+        registerPage.register(existingUser.getEmail(), existingUser.getPassword());
 
+        // Duplicate email hata mesajını kontrol et
         String errorMessage = registerPage.getErrorMessage();
-        test.info("Alınan hata mesajı: " + errorMessage);
+        test.info("Hata Mesajı: " + errorMessage);
 
-        Assert.assertTrue(errorMessage.contains("Email already exists"), "Beklenen hata mesajı alınmadı!");
-        test.pass("Sistem, tekrar kayıt denemesinde doğru hata mesajını gösterdi");
+        Assert.assertTrue(errorMessage.contains(Constants.ErrorMessages.EMAIL_EXISTS),
+                "Duplicate email hatası alınmadı!");
+        test.pass("Sistem duplicate email için doğru hata gösterdi");
     }
 
+    /**
+     * Test 4: Kısa şifre testi - Negatif senaryo
+     */
     @Test(priority = 4)
     public void testShortPasswordRegistration() {
-        test = extent.createTest(TestCaseMeta.TC04);
+        // Test başlat
+        test = extent.createTest("Kısa Şifre Testi", "6 karakterden kısa şifre ile kayıt deneme")
+                .assignCategory("Negative Tests").assignAuthor("QA Team");
 
+        // Test verilerini hazırla
         String email = "user" + System.currentTimeMillis() + "@example.com";
         String shortPassword = ConfigLoader.getProperty("weak.password");
+        test.info("Email: " + email);
+        test.info("Kısa Şifre: " + shortPassword + " (" + shortPassword.length() + " karakter)");
 
-        test.info("6 karakterden kısa şifreyle kayıt deneniyor: " + email);
-
+        // Register sayfasına git ve kısa şifre ile kayıt dene
         HeaderFragment header = new HeaderFragment(driver);
         header.clickRegister();
-        test.info("Register sayfasına geçildi");
 
+        RegisterPage registerPage = new RegisterPage(driver);
         registerPage.register(email, shortPassword);
-        test.info("Kayıt formu dolduruldu ve gönderildi (şifre maskelendi)");
 
+        // Kısa şifre hata mesajını kontrol et
         String errorMessage = registerPage.getErrorMessage();
-        test.info("Alınan hata mesajı: " + errorMessage);
+        test.info("Hata Mesajı: " + errorMessage);
 
-        Assert.assertTrue(errorMessage.contains("Failed - Password must be atleast 6 in length"),
-                "Beklenen hata mesajı alınmadı!");
-
-        test.pass("Sistem, kısa şifreyle kayıt denemesinde doğru hata mesajını gösterdi");
-    }
-
-
-
-
-    @AfterMethod
-    public void tearDown() {
-        extent.flush();
-        DriverFactory.quitDriver();
+        Assert.assertTrue(errorMessage.contains(Constants.ErrorMessages.PASSWORD_SHORT),
+                "Kısa şifre hatası alınmadı!");
+        test.pass("Sistem kısa şifre için doğru hata gösterdi");
     }
 }

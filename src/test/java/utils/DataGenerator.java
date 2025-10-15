@@ -4,10 +4,6 @@ import java.util.Random;
 
 public class DataGenerator {
 
-    public static String generateUniqueEmail() {
-        return "user" + System.currentTimeMillis() + "@example.com";
-    }
-
     public static String generateSecurePassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$!";
         StringBuilder sb = new StringBuilder();
