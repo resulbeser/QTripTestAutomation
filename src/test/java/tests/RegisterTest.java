@@ -310,12 +310,12 @@ public class RegisterTest extends BaseTest {
     }
 
     /**
-     * TC-08: Yeni kullanıcı kaydı - Pozitif senaryo
+     * TC-08: Random Email ile Başarılı Kayıt - Pozitif senaryo
      */
     @Test(priority = 8)
-    public void testNewUserRegistration() {
+    public void testRandomEmailSuccessfulRegistration() {
         // Test başlat
-        test = extent.createTest("TC-08: Yeni Kullanıcı Kaydı", "Geçerli bilgilerle yeni kullanıcı kaydı")
+        test = extent.createTest("TC-08: Random Email ile Başarılı Kayıt", "Random email ile geçerli bilgilerle yeni kullanıcı kaydı ve login sayfası kontrolü")
                 .assignCategory("Register Tests - Registration")
                 .assignCategory("Positive Tests")
                 .assignAuthor("QA Team");
@@ -324,10 +324,12 @@ public class RegisterTest extends BaseTest {
         String email = "user" + System.currentTimeMillis() + "@example.com";
         String password = DataGenerator.generateSecurePassword();
         test.info("Email: " + email);
+        test.info("Şifre: " + password);
 
         // Register sayfasına git
         HeaderFragment header = new HeaderFragment(driver);
         header.clickRegister();
+        test.pass("Register sayfasına başarıyla geçildi");
 
         RegisterPage registerPage = new RegisterPage(driver);
 
@@ -335,7 +337,7 @@ public class RegisterTest extends BaseTest {
         registerPage.enterEmail(email);
         registerPage.enterPassword(password);
         registerPage.enterConfirmPassword(password);
-        test.pass("Kayıt formu başarıyla dolduruldu");
+        test.pass("Kayıt formu random email ve güvenli şifre ile dolduruldu");
 
         // Register butonuna tıkla
         registerPage.clickRegister();
@@ -343,6 +345,99 @@ public class RegisterTest extends BaseTest {
 
         // Kayıt başarılı mı kontrol et (timeout ile)
         Assert.assertTrue(registerPage.isRegistrationSuccessful(), "Kayıt işlemi başarısız!");
-        test.pass("Yeni kullanıcı başarıyla kaydedildi");
+        test.pass("Random email ile kullanıcı başarıyla kaydedildi");
+
+        // Login sayfasına yönlendirildiğini doğrula
+        Assert.assertTrue(driver.getCurrentUrl().contains("/pages/login"),
+                "Login sayfasına yönlendirilmedi!");
+        test.pass("Kayıt sonrası login sayfasına başarıyla yönlendirildi - Login formu görüntülendi");
+
+        test.pass("Test başarıyla tamamlandı - Login formu görüntülendi");
     }
+
+    /**
+     * TC-09: Email Case Sensitivity Testi - Negatif senaryo
+     */
+    @Test(priority = 9)
+    public void testEmailCaseSensitivityValidation() {
+        // Test başlat
+        test = extent.createTest("TC-09: Email Case Sensitivity Testi", "Aynı email adresinin büyük/küçük harf versiyonlarıyla kayıt kontrolü")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
+
+        // Test verilerini hazırla
+        String baseEmail = "testuser" + System.currentTimeMillis();
+        String upperCaseEmail = baseEmail.toUpperCase() + "@EXAMPLE.COM";
+        String lowerCaseEmail = baseEmail.toLowerCase() + "@example.com";
+        String password = DataGenerator.generateSecurePassword();
+
+        test.info("Büyük Harfli Email: " + upperCaseEmail);
+        test.info("Küçük Harfli Email: " + lowerCaseEmail);
+        test.info("Şifre: " + password);
+
+        // İLK KAYIT: Büyük harfli email ile kayıt ol
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.pass("Register sayfasına başarıyla geçildi");
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Büyük harfli email ile kayıt yap
+        registerPage.enterEmail(upperCaseEmail);
+        registerPage.enterPassword(password);
+        registerPage.enterConfirmPassword(password);
+        test.pass("Form büyük harfli email ile dolduruldu");
+
+        registerPage.clickRegister();
+        test.info("Büyük harfli email ile kayıt yapıldı");
+
+        // İlk kayıt başarılı mı kontrol et
+        Assert.assertTrue(registerPage.isRegistrationSuccessful(), "İlk kayıt işlemi başarısız!");
+        test.pass("Büyük harfli email ile başarıyla kayıt olundu");
+
+        // İKİNCİ KAYIT DENEMESİ: Aynı email'in küçük harfli versiyonu ile kayıt olmaya çalış
+        // Tekrar register sayfasına git
+        driver.get(ConfigLoader.getBaseUrl());
+        header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.info("İkinci kayıt için register sayfasına gidildi");
+
+        registerPage = new RegisterPage(driver);
+
+        // Küçük harfli email ile kayıt yapmaya çalış
+        registerPage.enterEmail(lowerCaseEmail);
+        registerPage.enterPassword(password);
+        registerPage.enterConfirmPassword(password);
+        test.pass("Form küçük harfli email ile dolduruldu");
+
+        registerPage.clickRegister();
+        test.info("Küçük harfli email ile kayıt denendi");
+
+        // Case sensitivity kontrolü - Bu kayıt engellenmelidir
+        String errorMessage = registerPage.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            test.info("Hata Mesajı: " + errorMessage);
+
+            // Email exists hatası alınmalı (case sensitivity varsa)
+            Assert.assertTrue(errorMessage.contains(Constants.ErrorMessages.EMAIL_EXISTS) ||
+                            errorMessage.contains("User already exists") ||
+                            errorMessage.contains("Email already registered"),
+                    "Case sensitivity hatası alınmadı! Sistem aynı email'in farklı case versiyonunu kabul etti.");
+            test.pass("✓ Case Sensitivity ÇALIŞIYOR - Sistem aynı email'in farklı case versiyonunu reddetti");
+        } else {
+            // Eğer hata mesajı yoksa ve kayıt başarılı olduysa, case sensitivity yok
+            if (registerPage.isRegistrationSuccessful()) {
+                test.warning("⚠ Case Sensitivity ÇALIŞMIYOR - Sistem aynı email'in farklı case versiyonunu kabul etti");
+                Assert.fail("Case sensitivity çalışmıyor! Sistem '" + upperCaseEmail +
+                        "' ile kayıtlı kullanıcı varken '" + lowerCaseEmail + "' ile kayıt olmaya izin verdi.");
+            } else {
+                // Register sayfasında kaldıysa, HTML5 validasyonu engellemiş olabilir
+                test.pass("Form gönderimi engellendi - Case sensitivity kontrolü geçerli");
+            }
+        }
+
+        test.pass("Email case sensitivity testi tamamlandı");
+    }
+
 }
