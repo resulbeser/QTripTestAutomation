@@ -128,4 +128,46 @@ public class RegisterTest extends BaseTest {
                 "Kısa şifre hatası alınmadı!");
         test.pass("Sistem kısa şifre için doğru hata gösterdi");
     }
+
+    /**
+     * TC-05: Boş form validasyon testi - Negatif senaryo
+     */
+    @Test(priority = 5)
+    public void testEmptyFormValidation() {
+        // Test başlat
+        test = extent.createTest("TC-05: Boş Form Validasyon Testi", "Tüm alanlar boş bırakıldığında validasyon kontrolü")
+                .assignCategory("Register Tests - Validation")
+                .assignCategory("Negative Tests")
+                .assignAuthor("QA Team");
+
+        test.info("Test Senaryosu: Tüm alanlar boş bırakılarak register butonuna tıklanacak");
+
+        // Register sayfasına git
+        HeaderFragment header = new HeaderFragment(driver);
+        header.clickRegister();
+        test.pass("Register sayfasına başarıyla geçildi");
+
+        RegisterPage registerPage = new RegisterPage(driver);
+
+        // Hiçbir alan doldurmadan direkt register butonuna tıkla
+        registerPage.clickRegister();
+        test.info("Boş form ile register butonuna tıklandı");
+
+        // Hala register sayfasında olduğunu kontrol et (form gönderilmemeli)
+        Assert.assertTrue(registerPage.isCurrentPage(),
+                "Form gönderildi! Boş alanlarla form gönderimi engellenmeli.");
+        test.pass("Form gönderimi başarıyla engellendi");
+
+        // Validasyon mesajını kontrol et
+        String errorMessage = registerPage.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            test.info("Validasyon Mesajı: " + errorMessage);
+            test.pass("Sistem boş form için validasyon mesajı gösterdi");
+        } else {
+            test.pass("HTML5 validasyonu ile form gönderimi engellendi");
+        }
+    }
+
+
+
 }
